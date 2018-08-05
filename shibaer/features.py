@@ -2,6 +2,8 @@
 Compute some featuers
 """
 
+import pandas as pd
+
 
 def add_death_columns(frame):
 
@@ -28,6 +30,10 @@ def add_death_columns(frame):
     frame["T_mortality2d"] = frame.death_date <= frame.admission_date_min + pd.Timedelta('2d')
     frame["T_mortality30d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('30d'))
     frame["T_mortality60d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('60d'))
+
+
+    #
+    # frame["T_is_last_hospitalization"] = frame.apply(lambda row: row.admission_date_min == frame[frame.id_coded == row.id_coded].admission_date_min.max() ,axis=1)
 
     return frame
 
