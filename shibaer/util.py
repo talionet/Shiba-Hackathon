@@ -47,7 +47,7 @@ def read_process_data(data_file):
             continue
         f[col] = f[col].apply(lambda s: re.findall("Drug name: ([A-Z]*) ", str(s)))
         
-
+    
     # add/process some columns
     f.birth_date = pd.DatetimeIndex(f.birth_date)
     f.esi_chameleon = f.esi_chameleon.fillna("UNKNOWN")
@@ -79,7 +79,7 @@ def category2codes(f, inplace=True):
     return f
 
 
-def load_pickle_files(thumbdrive, folder):
+def load_pickle_files(thumbdrive, folder, is_small=False):
     """
     Utility to load the data from the thumbdrives. The data will be placed on the drives as several pickle files in a
     single folder.
@@ -91,11 +91,18 @@ def load_pickle_files(thumbdrive, folder):
     :return: pd.DataFrame
         The concatenated data as a single frame
     """
+    
+        
     # Find the pickle files
-    base_path = os.path.join("/Volumes", thumbdrive, folder)
-    pickle_files = os.listdir(base_path)
-    pickle_files = [f for f in pickle_files if f.endswith(".pkl")]
-
+    if is_small:
+        pickle_files = 'small_pickle.pkl'
+    else:
+        base_path = os.path.join("/Volumes", thumbdrive, folder)
+        pickle_files = os.listdir(base_path)
+        pickle_files = [f for f in pickle_files if f.endswith(".pkl")]
+    
+    
+        
     print("Found the following pickle files: ", pickle_files)
 
     # Load all data
