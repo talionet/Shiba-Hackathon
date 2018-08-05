@@ -46,6 +46,7 @@ def read_process_data(data_file):
         if col not in f.columns:
             continue
         f[col] = f[col].apply(lambda s: re.findall("Drug name: ([A-Z]*) ", str(s)))
+        
 
     # add/process some columns
     f.birth_date = pd.DatetimeIndex(f.birth_date)
@@ -106,6 +107,19 @@ def load_pickle_files(thumbdrive, folder):
 
     # Combine
     data = pd.concat(all_frames)
+    
+    # Process
+    ## change hebrew columns to english
+    hebrew_map= {'כאב':'pain',
+     'חום' :'fever',
+     'דופק': 'pulste',
+     'לחץ סיסטולי': 'sbp',
+     'לחץ דיאסטולי': 'dbp' ,
+     'סטורציה באויר חדר': 'is_room_saturation',
+     'סטורציה': 'saturation',
+     'מספר נשימות' : 'respitory_rate'}
+
+    data = data.rename(hebrew_map,axis=1)
 
     print("Finished loading data")
     print("Total number of rows: ", data.shape[0])
