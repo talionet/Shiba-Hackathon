@@ -18,13 +18,13 @@ def add_death_columns(frame):
     frame["T_release_date"] = frame["discharge_date_max hospitalization_out".split()].max(axis=1)
 
     # Total time = ER + hospitalization
-    frame["T_total_time_hospital"] = frame.release_date - frame.admission_date_min
+    frame["T_total_time_hospital"] = frame.T_release_date - frame.admission_date_min
 
     # Mortality of the ER
     frame["T_mortality_ER"] = frame.discharge_date_max >= frame.death_date
 
     # Mortality during hospitalization
-    frame["T_mortality_hospitalization"] = (frame.release_date >= frame.death_date) & ~frame.mortality_ER
+    frame["T_mortality_hospitalization"] = (frame.T_release_date >= frame.death_date) & ~frame.T_mortality_ER
 
     #
     frame["T_mortality2d"] = frame.death_date <= frame.admission_date_min + pd.Timedelta('2d')
