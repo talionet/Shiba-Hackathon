@@ -94,10 +94,11 @@ def load_pickle_files(thumbdrive, folder, is_small=False):
     
         
     # Find the pickle files
+    base_path = os.path.join("/Volumes", thumbdrive, folder)
+    
     if is_small:
         pickle_files = 'small_pickle.pkl'
     else:
-        base_path = os.path.join("/Volumes", thumbdrive, folder)
         pickle_files = os.listdir(base_path)
         pickle_files = [f for f in pickle_files if f.endswith(".pkl")]
     
