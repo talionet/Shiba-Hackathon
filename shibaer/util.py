@@ -112,12 +112,12 @@ def load_pickle_files(thumbdrive, folder):
     ## change hebrew columns to english
     hebrew_map= {'כאב':'pain',
      'חום' :'fever',
-     'דופק': 'pulste',
+     'דופק': 'pulse',
      'לחץ סיסטולי': 'sbp',
      'לחץ דיאסטולי': 'dbp' ,
-     'סטורציה באויר חדר': 'is_room_saturation',
+     'סטורציה באויר חדר': 'in_room_saturation',
      'סטורציה': 'saturation',
-     'מספר נשימות' : 'respitory_rate'}
+     'מספר נשימות' : 'respiratory_rate'}
 
     data = data.rename(hebrew_map,axis=1)
 
