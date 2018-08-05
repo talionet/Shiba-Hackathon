@@ -38,6 +38,16 @@ def add_death_columns(frame):
     return frame
 
 
+def add_Iranian_features(frame):
+    """
+    Add the features from the paper:
+    """
+    frame["IRAN_SI"] = frame.pulse / frame.sbp
+    frame["IRAN_MSI"] = 3 * frame.pulse / (frame.sbp + 2 * frame.dbp)
+    frame["IRAN_ASI"] = frame.age_on_date * frame.IRAN_SI
+    return frame
+
+
 if __name__ == "__main__":
     from shibaer.util import *
     data = load_pickle_files("DATAB", "ER")
