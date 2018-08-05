@@ -26,15 +26,30 @@ def add_death_columns(frame):
     # Mortality during hospitalization
     frame["T_mortality_hospitalization"] = (frame.T_release_date >= frame.death_date) & ~frame.T_mortality_ER
 
+    # Mortality after hospitalization
+    frame["T_mortality_after_hospitalization"] = frame.death_date > frame.T_release_date
+
     #
-    frame["T_mortality2d"] = frame.death_date <= frame.admission_date_min + pd.Timedelta('2d')
-    frame["T_mortality30d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('30d'))
-    frame["T_mortality60d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('60d'))
+    frame["T_mortality2d"] = frame.death_date <= frame.T_release_date + pd.Timedelta('2d')
+    frame["T_mortality30d"] = frame.death_date <= frame.T_release_date + pd.Timedelta('30d')
+    frame["T_mortality60d"] = frame.death_date <= frame.T_release_date + pd.Timedelta('60d')
 
 
     #
     # frame["T_is_last_hospitalization"] = frame.apply(lambda row: row.admission_date_min == frame[frame.id_coded == row.id_coded].admission_date_min.max() ,axis=1)
 
+    frame["T_mortality_type"] = frame["T_is_dead"]*(frame["T_mortality_ER"] + 2*frame["T_mortality_hospitalization"] + 3*frame["T_mortality_after_hospitalization"])
+
+    return frame
+
+
+def add_Iranian_features(frame):
+    """
+    Add the features from the paper:
+    """
+    frame["IRAN_SI"] = frame.pulse / frame.sbp
+    frame["IRAN_MSI"] = 3 * frame.pulse / (frame.sbp + 2 * frame.dbp)
+    frame["IRAN_ASI"] = frame.age_on_date * frame.IRAN_SI
     return frame
 
 
