@@ -10,24 +10,24 @@ def add_death_columns(frame):
     # Was this person hospitalized
     frame["is_hospitalization"] = ~frame.hospitalization_in.isna()
 
-    frame["is_dead"] = ~frame.death_date.isna()
+    frame["T_is_dead"] = ~frame.death_date.isna()
 
     # The real discharge date
-    frame["release_date"] = frame["discharge_date_max hospitalization_out".split()].max(axis=1)
+    frame["T_release_date"] = frame["discharge_date_max hospitalization_out".split()].max(axis=1)
 
     # Total time = ER + hospitalization
-    frame["total_time_hospital"] = frame.release_date - frame.admission_date_min
+    frame["T_total_time_hospital"] = frame.release_date - frame.admission_date_min
 
     # Mortality of the ER
-    frame["mortality_ER"] = frame.discharge_date_max >= frame.death_date
+    frame["T_mortality_ER"] = frame.discharge_date_max >= frame.death_date
 
     # Mortality during hospitalization
-    frame["mortality_hospitalization"] = (frame.release_date >= frame.death_date) & ~frame.mortality_ER
+    frame["T_mortality_hospitalization"] = (frame.release_date >= frame.death_date) & ~frame.mortality_ER
 
     #
-    frame["mortality2d"] = frame.death_date <= frame.admission_date_min + pd.Timedelta('2d')
-    frame["mortality30d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('30d'))
-    frame["mortality60d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('60d'))
+    frame["T_mortality2d"] = frame.death_date <= frame.admission_date_min + pd.Timedelta('2d')
+    frame["T_mortality30d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('30d'))
+    frame["T_mortality60d"] = (frame.death_date <= frame.admission_date_min + pd.Timedelta('60d'))
 
     return frame
 
