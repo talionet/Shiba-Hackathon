@@ -125,6 +125,12 @@ def load_pickle_files(thumbdrive, folder):
     print("Total number of rows: ", data.shape[0])
     return data
 
+def get_triaj_data(data):
+    md= pd.read_csv(os.path.abspath("../docs/ER/meta_data.csv"))
+    md= md.loc[md.is_load==1]
+    triaj_columns = md.loc[md['when (b=before, a=after)']== 'b']['column_name']
+    return data[triaj_columns]
+    
 
 # --- Test ---
 if __name__ == "__main__":
