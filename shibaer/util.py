@@ -95,7 +95,7 @@ def load_pickle_files(thumbdrive, folder, is_small=False, is_pc=False):
     # Find the pickle files
     base_path = os.path.join("/Volumes", thumbdrive, folder)
     
-    if is_pc=True:
+    if is_pc:
         base_path = os.path.join(thumbdrive, folder)
 
     
