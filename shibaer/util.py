@@ -158,9 +158,9 @@ def get_target_columns(data):
     return [c for c in data.columns if '_T' in c]
     
 
-def convert_to_numeric(data, numeric_cols = 'all', ignore_strs=['<','>'],convert_str_map= {},meta_data= None):   
+def convert_to_numeric(data, numeric_cols = [], ignore_strs=['<','>'],convert_str_map= {}):   
     print('converting numeric columns to numeric...')
-    data_numeric= data[numeric_cols]
+    data_numeric= data[numeric_cols].copy()
     for st in ignore_strs:
         data_numeric=data_numeric.applymap(lambda s: s.replace(st,'') if type(s)==str else s)
     for st in convert_str_map.keys():
@@ -169,25 +169,23 @@ def convert_to_numeric(data, numeric_cols = 'all', ignore_strs=['<','>'],convert
     data[numeric_cols] = data_numeric
     return data
 
-def remove_outliers(data, high=0.99, low=0.01, numeric_cols = []):
-    if numeric_cols == 'all': 
-        meta_data=read_metadata()
-        numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
+def remove_outliers(data, high=0.9999, low=0.0001, numeric_cols = []):
     print('removing outliers from numeric columns...')
-    quant_df = data[numeric_cols].quantile([low, high])
     for name in numeric_cols:
-        low = quant_df.loc[low, name]
-        high = quant_df.loc[high, name]
-        data[name].loc[data[name] <  quant_df.loc[low, name]] = low
-        data[name].loc[data[name] >  quant_df.loc[high, name]] = high    
+        q_low, q_high = data[name].quantile([low, high]) 
+        print('%s : %.2f - %.2f' %(name,q_low,q_high))
+        data[name].mask(data[name]>q_high,q_high,inplace=True)
+        data[name].mask(data[name]<q_low,q_low,inplace=True)       
     return data
 
-def preprocess_data(data, numeric_cols = 'all'):   
-    if numeric_cols == 'all': 
-        meta_data=read_metadata()
-        numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
+def preprocess_data(data, numeric_cols = 'all', meta_data = None):   
+    if type(numeric_cols)==str:
+        if numeric_cols == 'all':
+            if meta_data is None:
+                meta_data=read_metadata()
+            numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
     
-    processed_data= convert_to_numeric(data, numeric_cols = numeric_cols, meta_data= meta_data)
+    processed_data= convert_to_numeric(data, numeric_cols = numeric_cols)
     proessed_data = remove_outliers(data, high=0.99, low=0.001, numeric_cols = numeric_cols)
     return processed_data
 
