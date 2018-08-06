@@ -1,14 +1,15 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from keras.layers import Input, Embedding, Flatten, concatenate, Lambda, Dense
 from keras.regularizers import l2
 from keras import backend as K
 from keras.models import Model
 
-from shibaer.util import load_pickle_files, read_metadata, ICD9_columns, drug_columns
+from shibaer.util import load_pickle_files, read_metadata, ICD9_columns, drug_columns, preprocess_data
+from shibaer.features import add_death_columns
 
 EMBEDDING_REGULARIZATION = .0
 
@@ -65,6 +66,7 @@ def visit2vec(numeric_data_size, categocial_columns, categorical_families, targe
         outputs.append(this_out)
 
     model = Model(inputs=[numeric_data]+simple_categorical_inputs+fam_categorical_inputs, outputs=outputs)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=["accuracy"])
     model.summary()
     return model
 
@@ -77,7 +79,7 @@ def train(data):
 
     #
     categocial_columns = [
-        ("gender", 2),
+        ("gender", 3),
     ]
 
     # Get lists of ICD-9 codes and drugs
@@ -87,37 +89,53 @@ def train(data):
 
     #
     categorical_families = [
-        {"name": "ICD-9", "n-items": ICD9_list.shape[0], "emb-size": 10, "n-cols": 2},
-        {"name": "drugs", "n-items": drug_list.shape[0], "emb-size": 10, "n-cols": 2}
+        {"name": "ICD-9", "n-items": ICD9_list.shape[0], "emb-size": 10, "n-cols": len(ICD9_columns)},
+        {"name": "drugs", "n-items": drug_list.shape[0], "emb-size": 10, "n-cols": len(drug_columns)}
     ]
+    categorical_families = []
 
-    targets = [("dead", 2)]
+    targets = [("T_mortality2d", 2)]
 
     model = visit2vec(numeric_data_size, categocial_columns, categorical_families, targets)
 
     # --- Generate training data ---
 
-    numeric_inputs = data[numeric_cols].values
+    numeric_inputs = data[numeric_cols].fillna(0).values
+    numeric_inputs = StandardScaler().fit_transform(numeric_inputs)
+
     cat_inputs = [pd.get_dummies(data[col].astype('category')).values for col, _ in categocial_columns]
 
     icd_9_encoder = LabelEncoder().fit(ICD9_list)
     drug_encoder = LabelEncoder().fit(drug_list)
     for col in ICD9_columns:
-        data[col] = data[col].apply(lambda l: lambda v: icd_9_encoder.transform(v) if len(v) > 0 else v)
+        data[col] = data[col].fillna(0).apply(lambda v: icd_9_encoder.transform(v) if v != 0 and len(v) > 0 else v)
     for col in drug_columns:
-        data[col] = data[col].apply(lambda l: lambda v: drug_encoder.transform(v) if len(v) > 0 else v)
+        data[col] = data[col].fillna(0).apply(lambda v: drug_encoder.transform(v) if v != 0 and len(v) > 0 else v)
 
     fam_inputs = [data[col].values for col in ICD9_columns] + [data[col] for col in drug_columns]
 
-    model.fit([numeric_inputs] + cat_inputs + fam_inputs, data.T_is_dead.values, epochs=1, verbose=1)
+    inputs = [numeric_inputs] + cat_inputs + fam_inputs
+    inputs = [numeric_inputs] + cat_inputs
+
+    outputs = [np.eye(t_size)[data[t_name].astype(int).values.flatten()] for t_name, t_size in targets]
+    for t_name, t_size in targets:
+        print("Target: ")
+        print(data[t_name].value_counts())
+
+    model.fit(inputs,
+              outputs,
+              epochs=100,
+              verbose=2,
+              validation_split=.2)
 
     return model
 
 
 if __name__ == "__main__":
 
-    # visit2vec(numeric_data_size=10, categocial_columns=cats, categorical_families=cat_fam, targets=targets)
+    data = load_pickle_files("DATAM", "ER", is_small=False)
+    data = add_death_columns(data)
+    data = preprocess_data(data)
 
-    data = load_pickle_files("DATAA", "ER", is_small=True)
     train(data)
 

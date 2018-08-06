@@ -112,10 +112,9 @@ def load_pickle_files(thumbdrive, folder, is_small=False):
         pickle_files = ['small_pickle.pkl']
     else:
         pickle_files = os.listdir(base_path)
-        pickle_files = [f for f in pickle_files if f.endswith(".pkl")]
+        pickle_files = [f for f in pickle_files if f.endswith(".pkl") and not "small" in f]
     
-    
-        
+
     print("Found the following pickle files: ", pickle_files)
 
     # Load all data
