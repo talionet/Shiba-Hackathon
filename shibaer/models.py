@@ -5,6 +5,8 @@ from keras.regularizers import l2
 from keras import backend as K
 from keras.models import Model
 
+from shibaer.util import load_pickle_files, read_metadata
+
 EMBEDDING_REGULARIZATION = .0
 
 
@@ -67,16 +69,38 @@ def visit2vec(numeric_data_size, categocial_columns, categorical_families, targe
     model.summary()
 
 
+def train(data):
+    # Numeric data
+    meta_data = read_metadata()
+    numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
+    numeric_data_size = numeric_cols.shape[0]
+
+    categocial_columns = [
+        ("gender", 2, 2),
+    ]
+
+
+    categorical_families = [
+
+    ]
+
+    targets = [("dead", 2)]
+
+    model = visit2vec(numeric_data_size, categocial_columns, categorical_families, targets)
+
+
 if __name__ == "__main__":
-    cats = [("cat1", 5, 3), ("cat2", 7, 4)]
+    cats = [("cat1", 20, 5), ("cat2", 20, 5)]
 
     cat_fam = [
-        {"name":"ICD-9", "n-items": 67, "emb-size":10, "n-cols":3}
+        {"name":"ICD-9", "n-items": 200, "emb-size":10, "n-cols":3},
+        {"name": "drugs", "n-items": 500, "emb-size": 10, "n-cols": 3}
     ]
 
     targets = [("is-dead", 2)]
 
-    visit2vec(numeric_data_size=10, categocial_columns=cats, categorical_families=cat_fam, targets=targets)
+    # visit2vec(numeric_data_size=10, categocial_columns=cats, categorical_families=cat_fam, targets=targets)
 
-
+    data = load_pickle_files("DATAA", "ER", is_small=True)
+    train(data)
 

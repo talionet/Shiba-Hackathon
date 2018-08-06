@@ -183,7 +183,7 @@ def preprocess_data(data):
     
 # --- Test ---
 if __name__ == "__main__":
-    BASE_PATH = os.path.expanduser("/Volumes/data/ER")
+    BASE_PATH = os.path.expanduser("/Volumes/DATA/ER")
     INPUT_FILE = "2017 PROC 4.8.18.xlsx"
     OUTPUT_PKL = "2017 PROC 4.8.18.pkl"
 
