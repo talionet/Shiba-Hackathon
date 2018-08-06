@@ -1,7 +1,8 @@
 
 
-from keras.layers import Input, Embedding, Flatten, concatenate, Dense
+from keras.layers import Input, Embedding, Flatten, concatenate, Lambda, Dense
 from keras.regularizers import l2
+from keras import backend as K
 from keras.models import Model
 
 EMBEDDING_REGULARIZATION = .0
@@ -49,7 +50,8 @@ def visit2vec(numeric_data_size, categocial_columns, categorical_families, targe
         this_emb = Embedding(c_fam["n-items"], c_fam["emb-size"], name="embedding_" + c_fam["name"], embeddings_regularizer=l2(EMBEDDING_REGULARIZATION))
         for i in range(c_fam["n-cols"]):
             this_input = Input(shape=(1,), name="input_" + c_fam["name"] + "_" + str(i))
-            this_out = Flatten(name="flat_" + c_fam["name"] + "_" + str(i))(this_emb(this_input))
+            this_out = Lambda(lambda inp: K.mean(inp, axis=1))(this_emb(this_input))
+
             fam_categorical_inputs.append(this_input)
             fam_categoricals.append(this_out)
 
