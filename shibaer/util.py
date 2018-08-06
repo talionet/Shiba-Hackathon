@@ -78,7 +78,7 @@ def category2codes(f, inplace=True):
     return f
 
 
-def load_pickle_files(thumbdrive, folder, is_small=False):
+def load_pickle_files(thumbdrive, folder, is_small=False, is_pc=False):
     """
     Utility to load the data from the thumbdrives. The data will be placed on the drives as several pickle files in a
     single folder.
@@ -94,6 +94,10 @@ def load_pickle_files(thumbdrive, folder, is_small=False):
         
     # Find the pickle files
     base_path = os.path.join("/Volumes", thumbdrive, folder)
+    
+    if is_pc=True:
+        base_path = os.path.join(thumbdrive, folder)
+
     
     if is_small:
         pickle_files = ['small_pickle.pkl']
