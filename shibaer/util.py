@@ -169,7 +169,7 @@ def convert_to_numeric(data, numeric_cols = [], ignore_strs=['<','>'],convert_st
     data[numeric_cols] = data_numeric
     return data
 
-def remove_outliers(data, high=0.9999, low=0.0001, numeric_cols = []):
+def remove_outliers(data, high=0.9999, low=0.00001, numeric_cols = []):
     print('removing outliers from numeric columns...')
     for name in numeric_cols:
         q_low, q_high = data[name].quantile([low, high]) 
@@ -178,7 +178,7 @@ def remove_outliers(data, high=0.9999, low=0.0001, numeric_cols = []):
         data[name].mask(data[name]<q_low,q_low,inplace=True)       
     return data
 
-def preprocess_data(data, numeric_cols = 'all', meta_data = None):   
+def preprocess_data(data, numeric_cols = 'all', meta_data = None, percentiles=[0.001,0.999]):   
     if type(numeric_cols)==str:
         if numeric_cols == 'all':
             if meta_data is None:
@@ -186,7 +186,7 @@ def preprocess_data(data, numeric_cols = 'all', meta_data = None):
             numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
     
     processed_data= convert_to_numeric(data, numeric_cols = numeric_cols)
-    proessed_data = remove_outliers(data, high=0.99, low=0.001, numeric_cols = numeric_cols)
+    proessed_data = remove_outliers(data, high=percentiles[1], low=percentiles[0], numeric_cols = numeric_cols)
     return processed_data
 
     
