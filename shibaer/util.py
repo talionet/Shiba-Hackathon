@@ -133,14 +133,27 @@ def load_pickle_files(thumbdrive, folder, is_small=False):
     print("Total number of rows: ", data.shape[0])
     return data
 
-
 def get_triaj_data(data):
-    md = pd.read_csv(os.path.abspath("../docs/ER/meta_data.csv"))
-    md = md.loc[md.is_load==1]
+    md= pd.read_csv(os.path.abspath("../docs/ER/meta_data.csv"))
+    md= md.loc[md.is_load==1]
     triaj_columns = md.loc[md['when (b=before, a=after)']== 'b']['column_name']
     return data[triaj_columns]
     
 
+def remove_outliers(data, high=0.99, low=0.01):
+    quant_df = data.quantile([low, high])
+    for name in list(data.columns):
+        if is_numeric_dtype(df[name]):
+            data = data[(data[name] > quant_df.loc[low, name]) & (df[name] < quant_df.loc[high, name])]
+    return data
+
+def convert_to_numeric(data, ignore_strs=['<','>']):
+    for st in ignore_strs:
+        data=data.applymap(lambda s: s.replace(st,'') if type(s)==str else s)
+        
+    return data.apply(pd.to_numeric, errors='coerce')
+
+    
 # --- Test ---
 if __name__ == "__main__":
     BASE_PATH = os.path.expanduser("/Volumes/data/ER")
