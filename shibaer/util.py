@@ -145,39 +145,50 @@ def load_pickle_files(thumbdrive, folder, is_small=False):
     print("Total number of rows: ", data.shape[0])
     return data
 
-def get_triaj_data(data):
+def get_triaj_data(data,include_targets=True):
     md= pd.read_csv(os.path.abspath("../docs/ER/meta_data.csv"))
     md= md.loc[md.is_load==1]
     triaj_columns = md.loc[md['when (b=before, a=after)']== 'b']['column_name']
+    if include_targets:
+        target_columns = get_target_columns[data]
+        triaj_columns.extend(target_columns)
     return data[triaj_columns]
+
+def get_target_columns(data):
+    return [c for c in data.columns if '_T' in c]
     
 
-
-
-def convert_to_numeric(data, numeric_cols = 'all', ignore_strs=['<','>'],meta_data= None):   
+def convert_to_numeric(data, numeric_cols = 'all', ignore_strs=['<','>'],convert_str_map= {},meta_data= None):   
     print('converting numeric columns to numeric...')
-    if numeric_cols == 'all':  
-        numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
     data_numeric= data[numeric_cols]
     for st in ignore_strs:
         data_numeric=data_numeric.applymap(lambda s: s.replace(st,'') if type(s)==str else s)
+    for st in convert_str_map.keys():
+        data_numeric=data_numeric.applymap(lambda s: s.replace(st,convert_str_map[st]) if type(s)==str else s)
     data_numeric = data_numeric.apply(pd.to_numeric, errors='coerce')
     data[numeric_cols] = data_numeric
     return data
 
-def remove_outliers(data, high=0.99, low=0.01, numeric_cols = 'all'):
-    
+def remove_outliers(data, high=0.99, low=0.01, numeric_cols = []):
+    if numeric_cols == 'all': 
+        meta_data=read_metadata()
+        numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
     print('removing outliers from numeric columns...')
-    quant_df = data.quantile([low, high])
-    for name in list(data.columns):
-        if is_numeric_dtype(df[name]):
-            data = data[(data[name] > quant_df.loc[low, name]) & (df[name] < quant_df.loc[high, name])]
+    quant_df = data[numeric_cols].quantile([low, high])
+    for name in numeric_cols:
+        low = quant_df.loc[low, name]
+        high = quant_df.loc[high, name]
+        data[name].loc[data[name] <  quant_df.loc[low, name]] = low
+        data[name].loc[data[name] >  quant_df.loc[high, name]] = high    
     return data
 
-def preprocess_data(data):
-    meta_data=read_metadata()
-    processed_data= convert_to_numeric(data, numeric_cols = 'all',meta_data= meta_data)
-    proessed_data = remove_outliers(data, high=0.99, low=0.001, numeric_cols = 'all')
+def preprocess_data(data, numeric_cols = 'all'):   
+    if numeric_cols == 'all': 
+        meta_data=read_metadata()
+        numeric_cols = meta_data.loc[meta_data.data_type == 'numeric'].index
+    
+    processed_data= convert_to_numeric(data, numeric_cols = numeric_cols, meta_data= meta_data)
+    proessed_data = remove_outliers(data, high=0.99, low=0.001, numeric_cols = numeric_cols)
     return processed_data
 
     
