@@ -53,6 +53,13 @@ def add_Iranian_features(frame):
     return frame
 
 
+def age_index(data):
+    data['age_18_to_40'] = (18 <= data['age_on_date']) & (data['age_on_date'] < 40)  
+    data['age_40_to_65'] = (40 <= data['age_on_date']) & (data['age_on_date'] < 65)  
+    data['age_above_65'] = (65 <= data['age_on_date'])
+    
+    return data
+
 if __name__ == "__main__":
     from shibaer.util import *
     data = load_pickle_files("DATAB", "ER")
