@@ -47,7 +47,6 @@ def read_process_data(data_file):
             continue
         f[col] = f[col].apply(lambda s: re.findall("Drug name: ([A-Z]*) ", str(s)))
         
-    
     # add/process some columns
     f.birth_date = pd.DatetimeIndex(f.birth_date)
     f.esi_chameleon = f.esi_chameleon.fillna("UNKNOWN")
