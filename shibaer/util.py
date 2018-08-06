@@ -47,6 +47,7 @@ def read_process_data(data_file):
             continue
         f[col] = f[col].apply(lambda s: re.findall("Drug name: ([A-Z]*) ", str(s)))
         
+    
     # add/process some columns
     f.birth_date = pd.DatetimeIndex(f.birth_date)
     f.esi_chameleon = f.esi_chameleon.fillna("UNKNOWN")
@@ -77,8 +78,20 @@ def category2codes(f, inplace=True):
 
     return f
 
+def read_metadata():
+    meta_data= pd.read_csv(os.path.abspath("../docs/ER/meta_data.csv"), index_col='column_name')
+    hebrew_map= {'כאב':'pain',
+     'חום' :'fever',
+     'דופק': 'pulse',
+     'לחץ סיסטולי': 'sbp',
+     'לחץ דיאסטולי': 'dbp' ,
+     'סטורציה באויר חדר': 'in_room_saturation',
+     'סטורציה': 'saturation',
+     'מספר נשימות' : 'respiratory_rate'}
+    meta_data = md.rename(hebrew_map,axis=0)
+    return meta_data
 
-def load_pickle_files(thumbdrive, folder, is_small=False, is_pc=False):
+def load_pickle_files(thumbdrive, folder, is_small=False):
     """
     Utility to load the data from the thumbdrives. The data will be placed on the drives as several pickle files in a
     single folder.
@@ -94,10 +107,6 @@ def load_pickle_files(thumbdrive, folder, is_small=False, is_pc=False):
         
     # Find the pickle files
     base_path = os.path.join("/Volumes", thumbdrive, folder)
-    
-    if is_pc:
-        base_path = os.path.join(thumbdrive, folder)
-
     
     if is_small:
         pickle_files = ['small_pickle.pkl']
@@ -143,18 +152,33 @@ def get_triaj_data(data):
     return data[triaj_columns]
     
 
-def remove_outliers(data, high=0.99, low=0.01):
+
+
+def convert_to_numeric(data, numeric_cols = 'all', ignore_strs=['<','>']):   
+    print('converting numeric columns to numeric...')
+    if numeric_cols == 'all':  
+        numeric_cols = meta_data.loc[md.data_type == 'numeric'].index
+    data_numeric= data[numeric_cols]
+    for st in ignore_strs:
+        data_numeric=data_numeric.applymap(lambda s: s.replace(st,'') if type(s)==str else s)
+    data_numeric = data_numeric.apply(pd.to_numeric, errors='coerce')
+    data[numeric_cols] = data_numeric
+    return data
+
+def remove_outliers(data, high=0.99, low=0.01, numeric_cols = 'all'):
+    return data
+    print('removing outliers from numeric columns...')
     quant_df = data.quantile([low, high])
     for name in list(data.columns):
         if is_numeric_dtype(df[name]):
             data = data[(data[name] > quant_df.loc[low, name]) & (df[name] < quant_df.loc[high, name])]
     return data
 
-def convert_to_numeric(data, ignore_strs=['<','>']):
-    for st in ignore_strs:
-        data=data.applymap(lambda s: s.replace(st,'') if type(s)==str else s)
-        
-    return data.apply(pd.to_numeric, errors='coerce')
+def preprocess_data(data):
+    meta_data=read_metadata()
+    processed_data= convert_to_numeric(data, numeric_cols = 'all')
+    proessed_data = remove_outliers(data, high=0.99, low=0.001, numeric_cols = 'all')
+    return processed_data
 
     
 # --- Test ---
